@@ -1,4 +1,8 @@
 import pandas as pd
+import sklearn.metrics
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
 
 def importcsv(path):
     df = pd.read_csv( path )
@@ -12,7 +16,80 @@ def importcsv(path):
     if countOk == len( df.columns ):
         return df
 
-'''
+def f1ScoreTest(df, gaugedf):
+    x_train, x_test, y_train, y_test = train_test_split( df[['zipcode', 'age', 'partner_company', 'friend_promo',
+                                                             'contract_period', 'lifetime', 'class_registration_weekly',
+                                                             'avg_additional_charges_total', 'cancellation_freq']],
+                                                         df['exited'],
+                                                         test_size=1 )
+    model = LinearRegression( )
+    model.fit( x_train, y_train )
+    predictionTrain = model.predict( df[['zipcode', 'age', 'partner_company', 'friend_promo',
+                                         'contract_period', 'lifetime', 'class_registration_weekly',
+                                         'avg_additional_charges_total', 'cancellation_freq']] )
+
+    # print(sklearn.metrics.f1_score( df['exited'], [0 if x <= 0.51 else 1 for x in predictionTrain]))
+    #
+    for i in [ x/100 for x in range(0,100,5)]:
+        print(i, sklearn.metrics.f1_score( df['exited'], [0 if x <= i else 1 for x in predictionTrain]))
+
+
+def main2():
+
+    df = importcsv( 'gym_data.csv' )
+    df.columns = ['registration', 'zipcode', 'age', 'partner_company', 'friend_promo',
+       'contract_period', 'lifetime', 'class_registration_weekly',
+       'avg_additional_charges_total', 'cancellation_freq', 'exited']
+    gaugedf = importcsv( 'gym_test.csv' )
+    gaugedf.columns = ['registration', 'zipcode', 'age', 'partner_company', 'friend_promo',
+                       'contract_period', 'lifetime', 'class_registration_weekly',
+                       'avg_additional_charges_total', 'cancellation_freq']
+
+    pd.set_option( 'display.max_columns', None )
+    pd.set_option( 'display.max_rows', None )
+
+    x_train, x_test, y_train, y_test = train_test_split( df[['zipcode', 'age', 'partner_company', 'friend_promo',
+                                                             'contract_period', 'lifetime', 'class_registration_weekly',
+                                                             'avg_additional_charges_total', 'cancellation_freq']],
+                                                         df['exited'],
+                                                         test_size=1)
+
+    model = LinearRegression( )
+    model.fit( x_train, y_train )
+
+    predictionForF1 = model.predict(df[['zipcode', 'age', 'partner_company', 'friend_promo',
+                                                             'contract_period', 'lifetime', 'class_registration_weekly',
+                                                             'avg_additional_charges_total', 'cancellation_freq']])
+    prediction = model.predict( gaugedf[['zipcode', 'age', 'partner_company', 'friend_promo',
+                                         'contract_period', 'lifetime', 'class_registration_weekly',
+                                         'avg_additional_charges_total', 'cancellation_freq']] )
+    prediction = pd.DataFrame( {'predictionregr': prediction} )
+    gaugedf['predictionregr'] = prediction
+    gaugedf = gaugedf.assign( exited=gaugedf['predictionregr'].apply( lambda x: 0 if x <= 0.51 else 1 ) )
+    gaugedf = gaugedf.drop('predictionregr', axis=1)
+
+    #check F1 score
+    # f1ScoreTest( df, gaugedf )
+
+    gaugedf.columns = ['Registration', 'Zipcode', 'Age', 'Partner_company', 'Friend_promo',
+       'Contract_period', 'Lifetime', 'Class_registration_weekly',
+       'Avg_additional_charges_total', 'Cancellation_freq', 'Exited']
+    print('Ratio of exited clients to all clients in training data (gym_data.csv):',
+          df['age'].loc[(df['exited'] == 1)].count() / len(df))
+    print('Ratio of exited clients to all clients in test data (gym_test.csv):',
+          gaugedf['Age'].loc[gaugedf['Exited'] == 1].count( ) / len( gaugedf ))
+    print('F1 score in training data (gym_data.csv):',
+          sklearn.metrics.f1_score(df['exited'], [ 0 if x <= 0.51 else 1 for x in predictionForF1 ]))
+
+
+    #gaugedf.to_csv(file_name, sep='\t')
+
+
+if __name__ == '__main__':
+    main2( )
+
+
+''''
 # MANUAL TRAINING
 def ageDistribution(df):
     sns.set_theme( )
@@ -283,45 +360,9 @@ def unionProbability(df):
     #print(df[['exited','unionprob', 'test']].iloc[:6100].query('unionprob < 0.993'))
 '''
 
+'''
 def main2():
-    from sklearn.model_selection import train_test_split
-    from sklearn.linear_model import LinearRegression
 
-    df = importcsv( 'gym_data.csv' )
-    df.columns = ['registration', 'zipcode', 'age', 'partner_company', 'friend_promo',
-       'contract_period', 'lifetime', 'class_registration_weekly',
-       'avg_additional_charges_total', 'cancellation_freq', 'exited']
-    gaugedf = importcsv( 'gym_test.csv' )
-    gaugedf.columns = ['registration', 'zipcode', 'age', 'partner_company', 'friend_promo',
-                       'contract_period', 'lifetime', 'class_registration_weekly',
-                       'avg_additional_charges_total', 'cancellation_freq']
-
-    pd.set_option( 'display.max_columns', None )
-    pd.set_option( 'display.max_rows', None )
-
-    x_train, x_test, y_train, y_test = train_test_split( df[['zipcode', 'age', 'partner_company', 'friend_promo',
-                                                             'contract_period', 'lifetime', 'class_registration_weekly',
-                                                             'avg_additional_charges_total', 'cancellation_freq']],
-                                                         df['exited'] )
-    model = LinearRegression( )
-    model.fit( x_train, y_train )
-    prediction = model.predict( gaugedf[['zipcode', 'age', 'partner_company', 'friend_promo',
-                                         'contract_period', 'lifetime', 'class_registration_weekly',
-                                         'avg_additional_charges_total', 'cancellation_freq']] )
-    prediction = pd.DataFrame( {'predictionregr': prediction} )
-    gaugedf['predictionregr'] = prediction
-    gaugedf = gaugedf.assign( exited=gaugedf['predictionregr'].apply( lambda x: 0 if x <= 0.51 else 1 ) )
-    gaugedf = gaugedf.drop('predictionregr', axis=1)
-    gaugedf.columns = ['Registration', 'Zipcode', 'Age', 'Partner_company', 'Friend_promo',
-       'Contract_period', 'Lifetime', 'Class_registration_weekly',
-       'Avg_additional_charges_total', 'Cancellation_freq', 'Exited']
-    print('Ratio of exited clients to all clients in training data (gym_data.csv):', df['age'].loc[(df['exited'] == 1)].count() / len(df))
-    print('Ratio of exited clients to all clients in test data (gym_test.csv):', gaugedf['Age'].loc[gaugedf['Exited'] == 1].count( ) / len( gaugedf ))
-
-    #gaugedf.to_csv(file_name, sep='\t')
-
-
-    '''
     # MANUAL TRAINING
     zipdf = zipcodeProbability( df )
     agedf = ageProbability( df )
@@ -338,8 +379,7 @@ def main2():
     df = df.assign( sumcol=df[['zipprob', 'ageprob', 'partnerprob', 'friendprob', 'contractprob', \
                                  'lifetimeprob', 'regprob', 'cancelprob']].apply( lambda r: np.sum( r )/8, axis=1 ) )
     unionProbability(df)
-    '''
-    '''
+ 
     gaugedf = pd.merge(gaugedf, zipdf[zipdf['exited'] == 0].iloc[:,[0,2]], on=['zipcode'])
     gaugedf = pd.merge(gaugedf, agedf[agedf['exited'] == 0].iloc[:,[0,2]], on=['age'])
     gaugedf = pd.merge( gaugedf, partnerdf[partnerdf['exited'] == 0].iloc[:, [0, 2]], on=['partner_company'] )
@@ -362,7 +402,4 @@ def main2():
     gaugedf = gaugedf.assign( testexited = gaugedf['sumcol'].apply(lambda x: 0 if x >= 0.613323 else 1))
     print(gaugedf[gaugedf['testexited'] == 1])
     print(1983/8100, 8/200)
-    '''
-
-if __name__ == '__main__':
-    main2( )
+'''
