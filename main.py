@@ -84,10 +84,13 @@ def main2():
           gaugedf['Age'].loc[gaugedf['Exited'] == 1].count( ) / len( gaugedf ))
     print('F1 score in training data (gym_data.csv):',
           sklearn.metrics.f1_score(df['exited'], [ 0 if x <= 0.51 else 1 for x in predictionForF1 ]))
-
+    
+    
 
     #gaugedf.to_csv(file_name, sep='\t')
 
+def outputGauge(out):
+    print(out)
 
 if __name__ == '__main__':
     main2( )
