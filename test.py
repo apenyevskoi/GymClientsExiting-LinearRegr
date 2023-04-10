@@ -20,3 +20,7 @@ class Testclass():
 
   def setVar(self, newvar):
     self.var = newvar
+
+obj = NewClass(100)
+a = obj.get
+  
