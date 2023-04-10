@@ -53,9 +53,13 @@ def main2():
                                                              'avg_additional_charges_total', 'cancellation_freq']],
                                                          df['exited'],
                                                          test_size=1)
-
     model = LinearRegression( )
     model.fit( x_train, y_train )
+    print(
+        pd.DataFrame(model.coef_, ['zipcode', 'age', 'partner_company', 'friend_promo',
+                                                             'contract_period', 'lifetime', 'class_registration_weekly',
+                                                             'avg_additional_charges_total', 'cancellation_freq'])
+    )
 
     predictionForF1 = model.predict(df[['zipcode', 'age', 'partner_company', 'friend_promo',
                                                              'contract_period', 'lifetime', 'class_registration_weekly',
