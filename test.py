@@ -23,4 +23,7 @@ class Testclass():
 
 obj = NewClass(100)
 a = obj.get
+
+setter = Testclass(1)
+setter.setVar(100)
   
