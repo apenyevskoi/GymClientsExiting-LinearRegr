@@ -18,5 +18,5 @@ class Testclass():
   def __init__(self, var):
     self.var = var
 
-  def setVar(newvar):
+  def setVar(self, newvar):
     self.var = newvar
